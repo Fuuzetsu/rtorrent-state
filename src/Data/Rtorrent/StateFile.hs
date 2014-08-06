@@ -117,7 +117,3 @@ instance BEncode StateFile where
     .: "total_uploaded" .=! _totalUploaded
     .: "views" .=! _views
     .: endDict
-
-
-sampleState ∷ ByteString
-sampleState = fromString "d27:choke_heuristics.down.leech0:26:choke_heuristics.down.seed0:25:choke_heuristics.up.leech0:24:choke_heuristics.up.seed0:11:chunks_donei156e13:chunks_wantedi0e8:completei1e16:connection_leech0:15:connection_seed0:6:customd11:seedingtime0:e7:custom10:7:custom20:7:custom30:7:custom40:7:custom50:9:directory16:~/external/misc/7:hashingi0e15:ignore_commandsi0e3:keyi1948280960e11:loaded_file79:/home/shana/Downloads/.session/81D0BF0EEE39A7696B88F6360BF8F7BBA07A0F7B.torrent8:priorityi2e5:statei1e13:state_changedi1406924374e13:state_counteri65e13:throttle_name0:12:tied_to_file64:~/Downloads/watchmisc/Fatima (clip) - Hot Wave Interview.torrent18:timestamp.finishedi1359772042e17:timestamp.startedi1359739871e14:total_uploadedi21664781e5:viewslee"
