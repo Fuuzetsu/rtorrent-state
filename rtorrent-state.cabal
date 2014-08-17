@@ -1,5 +1,5 @@
 name:                rtorrent-state
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Parsing and manipulation of rtorrent state file contents
 description:         Parsing and manipulation of rtorrent state file contents
 homepage:            http://github.com/Fuuzetsu/rtorrent-state

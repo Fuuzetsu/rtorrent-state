@@ -3,6 +3,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- |
 -- Module      :  Data.Rtorrent.StateFile
 -- Copyright   :  (c) Mateusz Kowalczyk 2014
@@ -27,7 +29,8 @@
 -- @'overFilesIn' "rtorrent/session/dir" 'stopTorrent'@
 module Data.Rtorrent.StateFile where
 
-import           Control.Applicative ((<$>), (<*>))
+import           Control.Applicative ((<$>))
+import           Control.Exception (catch, IOException)
 import           Control.Lens ((.~), set, view)
 import           Control.Monad ((>=>))
 import           Data.BEncode (decode, encode, Result)
@@ -38,18 +41,25 @@ import           Data.List (isSuffixOf)
 import           Data.Map (Map, mapEither, fromList)
 import           Data.Rtorrent.StateFile.Types
 import           Prelude hiding (readFile, writeFile, length)
-import           System.Directory
-import           System.FilePath
+import           System.Directory (getDirectoryContents)
+import           System.FilePath ((</>))
+
 
 -- | Takes a directory, 'StateFile' modification function and does an
 -- ‘in-place’ modifications to all .rtorrent files it can find and
 -- parse in that directory. Returns the list of all file paths and any
 -- potential errors that with each.
+--
+-- See 'getRtorrentFiles' for the type of exception this function can throw.
 overFilesIn ∷ FilePath → StateMod → IO [(FilePath, Maybe String)]
 overFilesIn fp f =
-  getRtorrentFiles fp >>= mapM (\x → (,) <$> return x <*> withRtorrentState x f)
+  getRtorrentFiles fp >>= mapM (\x → (x,) <$> withRtorrentState x f)
 
 -- | Gets a list of all @.rtorrent@ files in the specified directory.
+--
+-- This function uses 'getDirectoryContents' which can throw various
+-- IOExceptions. It's up to the user to catch these if they wish to do
+-- so.
 getRtorrentFiles ∷ FilePath → IO [FilePath]
 getRtorrentFiles t =
   map (t </>) . filter (".rtorrent" `isSuffixOf`) <$> getDirectoryContents t
@@ -74,6 +84,9 @@ keepInvalid = fst . mapEither id
 
 -- | Given a directory path, produces a 'Map' of file paths from
 -- individual files to their parsing results.
+--
+-- This function uses 'getRtorrentFiles' which can throw an
+-- IOException in case there is a problem reading the directory.
 parseFiles ∷ FilePath → IO (Map FilePath (Result StateFile))
 parseFiles t = getRtorrentFiles t >>= mapM parseFile' >>= return . fromList
 
@@ -85,7 +98,13 @@ parseFile = parseFile' >=> return . snd
 -- | Parses a file and returns a pair of of its path and the parsing
 -- result. The path is useful if we're processing whole directories.
 parseFile' ∷ FilePath → IO (FilePath, Result StateFile)
-parseFile' f = readFile f >>= \c → return (f, length c `seq` decodeState c)
+parseFile' f = readFileE >>= return . (f,) . \case
+  Left (e ∷ IOException) → Left $ show e
+  Right c → length c `seq` decodeState c
+  where
+    readFileE ∷ IO (Either IOException ByteString)
+    readFileE = (Right <$> readFile f) `catch` (return . Left)
+
 
 -- | Sets the torrent to started state.
 startTorrent ∷ StateMod

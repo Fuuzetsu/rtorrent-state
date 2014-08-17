@@ -69,6 +69,11 @@ spec = describe "StateFile" $ do
   prop "can start all torrents" . withRtorrentFiles stopTorrent $ \d →
     afterRunning d startTorrent `shouldSatisfyIO` allStarted
 
+  it "parseFile deals with inexistent path" $
+    let f = "nofile-rtorrent-state" in
+    parseFile f `shouldReturn`
+    Left (f ++ ": openBinaryFile: does not exist (No such file or directory)")
+
   where
     allSatisfy ∷ M.Map FilePath (Result StateFile) -- ^ parsed files
                → (Result StateFile → Bool) -- ^ predicate
