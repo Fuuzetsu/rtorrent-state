@@ -1,10 +1,12 @@
-{-# LANGUAGE UnicodeSyntax #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE UnicodeSyntax #-}
+{-# OPTIONS_HADDOCK show-extensions #-}
+
 -- |
 -- Module      :  Data.Rtorrent.StateFile
 -- Copyright   :  (c) Mateusz Kowalczyk 2014
@@ -43,7 +45,6 @@ import           Data.Rtorrent.StateFile.Types
 import           Prelude hiding (readFile, writeFile, length)
 import           System.Directory (getDirectoryContents)
 import           System.FilePath ((</>))
-
 
 -- | Takes a directory, 'StateFile' modification function and does an
 -- ‘in-place’ modifications to all .rtorrent files it can find and
@@ -105,13 +106,12 @@ parseFile' f = readFileE >>= return . (f,) . \case
     readFileE ∷ IO (Either IOException ByteString)
     readFileE = (Right <$> readFile f) `catch` (return . Left)
 
-
 -- | Sets the torrent to started state.
-startTorrent ∷ StateMod
+startTorrent ∷ StateFile → StateFile
 startTorrent = state .~ 1
 
 -- | Sets the torrent to stopped stated.
-stopTorrent ∷ StateMod
+stopTorrent ∷ StateFile → StateFile
 stopTorrent = state .~ 0
 
 -- | Changes the file the torrent is tied to.
